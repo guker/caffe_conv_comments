@@ -8,50 +8,50 @@
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
-// Ö´ĞĞÁ÷³ÌÊÇ£¬Ê×ÏÈÖ´ĞĞLayerSetUp£¬È»ºóÖ´ĞĞReshape
-// ×îºó²ÅÊÇÇ°´«£¬·´´«
+// æ‰§è¡Œæµç¨‹æ˜¯ï¼Œé¦–å…ˆæ‰§è¡ŒLayerSetUpï¼Œç„¶åæ‰§è¡ŒReshape
+// æœ€åæ‰æ˜¯å‰ä¼ ï¼Œåä¼ 
 
 
 
-// ÉèÖÃkernelµÄ´óĞ¡
-// ÉèÖÃstride
-// ÉèÖÃpad
+// è®¾ç½®kernelçš„å¤§å°
+// è®¾ç½®stride
+// è®¾ç½®pad
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
       
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  // ÊÇ·ñĞèÒªÇ¿ÖÆnÎ¬¾í»ı
+  // æ˜¯å¦éœ€è¦å¼ºåˆ¶nç»´å·ç§¯
   force_nd_im2col_ = conv_param.force_nd_im2col();
   
-  // ÊäÈëÍ¼ÏñµÄÍ¨µÀÊÇµÚ¼¸¸öÖá
+  // è¾“å…¥å›¾åƒçš„é€šé“æ˜¯ç¬¬å‡ ä¸ªè½´
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
-  // Ò»°ãÀ´ËµchannelÖ®ºóÊÇÍ¼ÏñµÄ¸ß¶ÈºÍ¿í¶È£¬ÕâÀï³ÆÖ®Îª¿Õ¼äÖá
+  // ä¸€èˆ¬æ¥è¯´channelä¹‹åæ˜¯å›¾åƒçš„é«˜åº¦å’Œå®½åº¦ï¼Œè¿™é‡Œç§°ä¹‹ä¸ºç©ºé—´è½´
   const int first_spatial_axis = channel_axis_ + 1;
   
-  // Ò»¹²ÓĞ¼¸¸öÖá£¬±ÈÈçÍ¼ÏñµÄblobÊÇ[b,c,h,w]ÄÇÃ´num_axes=4
+  // ä¸€å…±æœ‰å‡ ä¸ªè½´ï¼Œæ¯”å¦‚å›¾åƒçš„blobæ˜¯[b,c,h,w]é‚£ä¹ˆnum_axes=4
   // channel_axis = 1, first_spatial_axis=2
   const int num_axes = bottom[0]->num_axes();
 
-  // ¿Õ¼äÖáµÄ¸öÊı
+  // ç©ºé—´è½´çš„ä¸ªæ•°
   // num_spatial_axes_=4-2=2
   num_spatial_axes_ = num_axes - first_spatial_axis;
 
   // num_spatial_axes_ >= 0
   CHECK_GE(num_spatial_axes_, 0);
 
-  // ±äÁ¿ÓĞshapeµÄ¶¼ÊÇ´æ·ÅµÄÊÇĞÎ×´Êı¾İ
-  // ÊäÈëµÄblobµÄĞÎ×´ÊÇ[b,c,h]ËùÒÔbottom_dim_blob_shapeµÄÎ¬¶ÈÊÇ3
+  // å˜é‡æœ‰shapeçš„éƒ½æ˜¯å­˜æ”¾çš„æ˜¯å½¢çŠ¶æ•°æ®
+  // è¾“å…¥çš„blobçš„å½¢çŠ¶æ˜¯[b,c,h]æ‰€ä»¥bottom_dim_blob_shapeçš„ç»´åº¦æ˜¯3
   vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
   
-  // ¿Õ¼äµÄblobµÄĞÎ×´ÊÇ[h,w]£¬ËùÒÔÊÇmax(num_spatial_axes_,1)=2
+  // ç©ºé—´çš„blobçš„å½¢çŠ¶æ˜¯[h,w]ï¼Œæ‰€ä»¥æ˜¯max(num_spatial_axes_,1)=2
   vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
 
   
   // Setup filter kernel dimensions (kernel_shape_).
-  // filter kernelµÄ
-  // kernelµÄĞÎ×´
+  // filter kernelçš„
+  // kernelçš„å½¢çŠ¶
   kernel_shape_.Reshape(spatial_dim_blob_shape);
   int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
   if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
@@ -61,31 +61,31 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         << "Either kernel_size or kernel_h/w should be specified; not both.";
     kernel_shape_data[0] = conv_param.kernel_h();
     kernel_shape_data[1] = conv_param.kernel_w();
-  } else {// Õı·½ĞÎµÄkernel
-    // kernel_sizeÖĞµÄĞÎ×´²ÎÊıµÄ¸öÊı£¬ÕâÀïnum_kernel_dims = 1
+  } else {// æ­£æ–¹å½¢çš„kernel
+    // kernel_sizeä¸­çš„å½¢çŠ¶å‚æ•°çš„ä¸ªæ•°ï¼Œè¿™é‡Œnum_kernel_dims = 1
     const int num_kernel_dims = conv_param.kernel_size_size();
     CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
         << "kernel_size must be specified once, or once per spatial dimension "
         << "(kernel_size specified " << num_kernel_dims << " times; "
         << num_spatial_axes_ << " spatial dims);";
-	  // kernel_shape_data[0]ºÍ[1]=conv_param.kernel_size(0)
+	  // kernel_shape_data[0]å’Œ[1]=conv_param.kernel_size(0)
       for (int i = 0; i < num_spatial_axes_; ++i) {
         kernel_shape_data[i] =
             conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
       }
   }
 
-  // ¼ì²ékernel_shape_dataÊÇ²»ÊÇÕıÈ·ÉèÖÃ£¬¼´kernelµÄ±ß³¤²»ÄÜÎª<0µÄÇé¿ö
+  // æ£€æŸ¥kernel_shape_dataæ˜¯ä¸æ˜¯æ­£ç¡®è®¾ç½®ï¼Œå³kernelçš„è¾¹é•¿ä¸èƒ½ä¸º<0çš„æƒ…å†µ
   for (int i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
 
   
   // Setup stride dimensions (stride_).
-  // ÉèÖÃ²½³¤(stride)
+  // è®¾ç½®æ­¥é•¿(stride)
   stride_.Reshape(spatial_dim_blob_shape);
   int* stride_data = stride_.mutable_cpu_data();
-  // ÊÇ·ñÊÇ¾ØĞÎµÄ·½¿ò
+  // æ˜¯å¦æ˜¯çŸ©å½¢çš„æ–¹æ¡†
   if (conv_param.has_stride_h() || conv_param.has_stride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
         << "stride_h & stride_w can only be used for 2D convolution.";
@@ -93,7 +93,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         << "Either stride or stride_h/w should be specified; not both.";
     stride_data[0] = conv_param.stride_h();
     stride_data[1] = conv_param.stride_w();
-  } else {// Õı·½ĞÎµÄ·½¿ò
+  } else {// æ­£æ–¹å½¢çš„æ–¹æ¡†
     // num_stride_dims = 1
     const int num_stride_dims = conv_param.stride_size();
     CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
@@ -103,7 +103,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         << num_spatial_axes_ << " spatial dims);";
     const int kDefaultStride = 1;
     for (int i = 0; i < num_spatial_axes_; ++i) {
-	  // stride_data[0]ºÍ[1] = conv_param.stride(0)
+	  // stride_data[0]å’Œ[1] = conv_param.stride(0)
       stride_data[i] = (num_stride_dims == 0) ? kDefaultStride :
           conv_param.stride((num_stride_dims == 1) ? 0 : i);
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
@@ -112,7 +112,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   
   // Setup pad dimensions (pad_).
-  // ÉèÖÃpadµÄÊı¾İ
+  // è®¾ç½®padçš„æ•°æ®
   pad_.Reshape(spatial_dim_blob_shape);
   int* pad_data = pad_.mutable_cpu_data();
   if (conv_param.has_pad_h() || conv_param.has_pad_w()) {
@@ -131,15 +131,15 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         << num_spatial_axes_ << " spatial dims);";
     const int kDefaultPad = 0;
     for (int i = 0; i < num_spatial_axes_; ++i) {
-	  // pad_data[0]ºÍ[1] = conv_param.pad[0]
+	  // pad_data[0]å’Œ[1] = conv_param.pad[0]
       pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
-  // ÕâÀïÊÇ1x1¾í»ı£¬kernel_shape_data[0]Óë[1]=1²¢ÇÒstride_data[0]Óë[1]=1
-  // ÇÒpad_data[0]Óë[1]=1
+  // è¿™é‡Œæ˜¯1x1å·ç§¯ï¼Œkernel_shape_data[0]ä¸[1]=1å¹¶ä¸”stride_data[0]ä¸[1]=1
+  // ä¸”pad_data[0]ä¸[1]=1
   is_1x1_ = true;
   for (int i = 0; i < num_spatial_axes_; ++i) {
     is_1x1_ &=
@@ -149,48 +149,48 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   
   // Configure output channels and groups.
-  // ÉèÖÃÊä³öµÄÍ¨µÀÒÔ¼°¾í»ı×éµÄ´óĞ¡
+  // è®¾ç½®è¾“å‡ºçš„é€šé“ä»¥åŠå·ç§¯ç»„çš„å¤§å°
 
-  // ÊäÈëÍ¼ÏñµÄÍ¨µÀÊı
+  // è¾“å…¥å›¾åƒçš„é€šé“æ•°
   channels_ = bottom[0]->shape(channel_axis_);
 
-  // ¾­¹ı¾í»ıÖ®ºóµÄÊä³öÍ¼ÏñµÄÍ¨µÀÊı
+  // ç»è¿‡å·ç§¯ä¹‹åçš„è¾“å‡ºå›¾åƒçš„é€šé“æ•°
   num_output_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(num_output_, 0);
 
-  // ¾í»ı×éµÄ´óĞ¡
+  // å·ç§¯ç»„çš„å¤§å°
   group_ = this->layer_param_.convolution_param().group();
 
-  // ¼ì²éºÏ·¨ĞÔ
+  // æ£€æŸ¥åˆæ³•æ€§
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
 
-  // ½«ÊäÈëÍ¨µÀºÍÊä³öÍ¨µÀ¸³Öµ¸ø
-  // conv_in_channels_ºÍconv_out_channels_
-  if (reverse_dimensions()) {// ÊÇ·ñÒª·­×ªÎ¬¶È£¬½«Êä³ö×÷ÎªÊäÈë£¬ÊäÈë×÷ÎªÊä³ö
+  // å°†è¾“å…¥é€šé“å’Œè¾“å‡ºé€šé“èµ‹å€¼ç»™
+  // conv_in_channels_å’Œconv_out_channels_
+  if (reverse_dimensions()) {// æ˜¯å¦è¦ç¿»è½¬ç»´åº¦ï¼Œå°†è¾“å‡ºä½œä¸ºè¾“å…¥ï¼Œè¾“å…¥ä½œä¸ºè¾“å‡º
     conv_out_channels_ = channels_;
     conv_in_channels_ = num_output_;
-  } else {// ÊäÈëµÄchannelºÍÊä³öµÄchannel
+  } else {// è¾“å…¥çš„channelå’Œè¾“å‡ºçš„channel
     conv_out_channels_ = num_output_;
     conv_in_channels_ = channels_;
   }
 
 
-  // ÉèÖÃÈ¨ÖØµÄĞÎ×´
+  // è®¾ç½®æƒé‡çš„å½¢çŠ¶
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
 
-  // È¨ÖØĞÎ×´ = [conv_out_channels_, conv_in_channels_/group, weight_h, weight_w]
+  // æƒé‡å½¢çŠ¶ = [conv_out_channels_, conv_in_channels_/group, weight_h, weight_w]
   vector<int> weight_shape(2);
   weight_shape[0] = conv_out_channels_;
-  weight_shape[1] = conv_in_channels_ / group_;// ½«ÊäÈëµÄchannel·Ö×é
+  weight_shape[1] = conv_in_channels_ / group_;// å°†è¾“å…¥çš„channelåˆ†ç»„
   for (int i = 0; i < num_spatial_axes_; ++i) { // num_spatial_axes_=2
     weight_shape.push_back(kernel_shape_data[i]);
   }
 
-  // Æ«ÖÃµÄĞÎ×´ = [num_output_]
+  // åç½®çš„å½¢çŠ¶ = [num_output_]
   // bias_term = 1
   bias_term_ = this->layer_param_.convolution_param().bias_term();
   vector<int> bias_shape(bias_term_, num_output_);
@@ -212,22 +212,22 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     if (bias_term_) {
-	  // Èç¹ûÓĞÔòblobs_[0]±íÊ¾È¨ÖØºÍ[1]±íÊ¾Æ«ÖÃ
+	  // å¦‚æœæœ‰åˆ™blobs_[0]è¡¨ç¤ºæƒé‡å’Œ[1]è¡¨ç¤ºåç½®
       this->blobs_.resize(2);
     } else {
       this->blobs_.resize(1);
     }
 
-	// ³õÊ¼»¯È¨ÖØ
+	// åˆå§‹åŒ–æƒé‡
     // Initialize and fill the weights:
-    // È¨ÖØµÄĞÎ×´ÈçÏÂ
+    // æƒé‡çš„å½¢çŠ¶å¦‚ä¸‹
     // output channels x input channels per-group x kernel height x kernel width
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
         this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the biases.
-    // ³õÊ¼»¯Æ«ÖÃ
+    // åˆå§‹åŒ–åç½®
     if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
@@ -236,11 +236,11 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-  // count(1)±íÊ¾´ÓµÚ2¸öÎ¬¶Èµ½×îºóÒ»¸öÎ¬¶ÈÖ®¼äµÄÊı¾İµÄ¸öÊı
-  // ¼´kernel_dim_ = (conv_in_channels_/group)*weight_h*weight_w
+  // count(1)è¡¨ç¤ºä»ç¬¬2ä¸ªç»´åº¦åˆ°æœ€åä¸€ä¸ªç»´åº¦ä¹‹é—´çš„æ•°æ®çš„ä¸ªæ•°
+  // å³kernel_dim_ = (conv_in_channels_/group)*weight_h*weight_w
   kernel_dim_ = this->blobs_[0]->count(1);
 
-  // ¼ÆËã¾í»ı·Ö×éÓÃµÄoffse
+  // è®¡ç®—å·ç§¯åˆ†ç»„ç”¨çš„offse
   weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
 
   
@@ -249,15 +249,15 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 
-// ¸Ãº¯Êı¸ÉÁËÒ»ÏÂ¼¸¼şÊÂÇé
-// ¸Ä±ätopµÄĞÎ×´
-// ÉèÖÃ¾í»ı·Ö×éÓÃµÄoffset
-// ÉèÖÃ¾­¹ıim2col±ä»»Ö®ºó´æ·ÅÊı¾İcol_buffer_µÄĞÎ×´
-// bias_multiplier_½«Æ«ÖÃÀ©Õ¹³É¾ØÕó
+// è¯¥å‡½æ•°å¹²äº†ä¸€ä¸‹å‡ ä»¶äº‹æƒ…
+// æ”¹å˜topçš„å½¢çŠ¶
+// è®¾ç½®å·ç§¯åˆ†ç»„ç”¨çš„offset
+// è®¾ç½®ç»è¿‡im2colå˜æ¢ä¹‹åå­˜æ”¾æ•°æ®col_buffer_çš„å½¢çŠ¶
+// bias_multiplier_å°†åç½®æ‰©å±•æˆçŸ©é˜µ
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // µÚÒ»¸ö¿Õ¼äÖáÊÇµÚ¼¸¸ö
+  // ç¬¬ä¸€ä¸ªç©ºé—´è½´æ˜¯ç¬¬å‡ ä¸ª
   const int first_spatial_axis = channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
       << "bottom num_axes may not change.";
@@ -278,37 +278,37 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Shape the tops.
   bottom_shape_ = &bottom[0]->shape();
   
-  // ¼ÆËãµÃµ½output_shape_
-  // ¼´Êä³öµÄÍ¼ÏñµÄ¸ß¶ÈºÍ¿í¶È
+  // è®¡ç®—å¾—åˆ°output_shape_
+  // å³è¾“å‡ºçš„å›¾åƒçš„é«˜åº¦å’Œå®½åº¦
   compute_output_shape();
 
-  // ÉèÖÃÊä³ötopµÄĞÎ×´
-  // ½«batchsizeÑ¹Èëµ½top_shape(¾ÍÊÇchannelÖ®Ç°µÄ²¿·Ö£¬Ò²¾ÍÊÇbatchsizeÁË)
+  // è®¾ç½®è¾“å‡ºtopçš„å½¢çŠ¶
+  // å°†batchsizeå‹å…¥åˆ°top_shape(å°±æ˜¯channelä¹‹å‰çš„éƒ¨åˆ†ï¼Œä¹Ÿå°±æ˜¯batchsizeäº†)
   vector<int> top_shape(bottom[0]->shape().begin(),
       bottom[0]->shape().begin() + channel_axis_);
-  // Êä³öµÄchannelÑ¹Èëµ½top_shape
+  // è¾“å‡ºçš„channelå‹å…¥åˆ°top_shape
   top_shape.push_back(num_output_);
-  // Ñ¹ÈëÊä³öÍ¼ÏñµÄ³¤¶ÈºÍ¿í¶È
+  // å‹å…¥è¾“å‡ºå›¾åƒçš„é•¿åº¦å’Œå®½åº¦
   for (int i = 0; i < num_spatial_axes_; ++i) {
     top_shape.push_back(output_shape_[i]);
   }
-  // ¸Ä±ätopµÄĞÎ×´
+  // æ”¹å˜topçš„å½¢çŠ¶
   // batchsize X conv_out_channel X out_height X out_width
   for (int top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(top_shape);
   }
 
-  // ·´¾í»ıreverse_dimensions²Å=1
+  // åå·ç§¯reverse_dimensionsæ‰=1
   if (reverse_dimensions()) {
-  	// conv_out_spatial_dim_= ÊäÈëÍ¼ÏñµÄ³¤¶ÈºÍ¿í¶È
+  	// conv_out_spatial_dim_= è¾“å…¥å›¾åƒçš„é•¿åº¦å’Œå®½åº¦
     conv_out_spatial_dim_ = bottom[0]->count(first_spatial_axis);
   } else {
-    // conv_out_spatial_dim_ = ¾í»ıÖ®ºóÊä³öÍ¼ÏñµÄ³¤¶ÈºÍ¿í¶È
+    // conv_out_spatial_dim_ = å·ç§¯ä¹‹åè¾“å‡ºå›¾åƒçš„é•¿åº¦å’Œå®½åº¦
     conv_out_spatial_dim_ = top[0]->count(first_spatial_axis);
   }
 
 
-  // ÉèÖÃ¾í»ı·Ö×éÓÃµÄoffset
+  // è®¾ç½®å·ç§¯åˆ†ç»„ç”¨çš„offset
   // kernel_dim_ = (conv_in_channels_/group)*weight_h*weight_w
   col_offset_ = kernel_dim_ * conv_out_spatial_dim_;
   output_offset_ = conv_out_channels_ * conv_out_spatial_dim_ / group_;
@@ -316,15 +316,15 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   
   // Setup input dimensions (conv_input_shape_).
   vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-  // ¾í»ıµÄÊäÈëµÄĞÎ×´ÊÇÈıÎ¬µÄ£¬Òò´Ënum_spatial_axes_+1=3
+  // å·ç§¯çš„è¾“å…¥çš„å½¢çŠ¶æ˜¯ä¸‰ç»´çš„ï¼Œå› æ­¤num_spatial_axes_+1=3
   conv_input_shape_.Reshape(bottom_dim_blob_shape);
   int* conv_input_shape_data = conv_input_shape_.mutable_cpu_data();
   for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
     if (reverse_dimensions()) {
-	  // conv_input_shape_data = [ÊäÈëÍ¼ÏñÍ¨µÀÊı, ÊäÈëÍ¼Ïñh, ÊäÈëÍ¼Ïñw]
+	  // conv_input_shape_data = [è¾“å…¥å›¾åƒé€šé“æ•°, è¾“å…¥å›¾åƒh, è¾“å…¥å›¾åƒw]
       conv_input_shape_data[i] = top[0]->shape(channel_axis_ + i);
     } else {
-      // conv_input_shape_data = [¾í»ıÖ®ºóÊä³öÍ¼ÏñÍ¨µÀÊı, ¾í»ıÖ®ºóÊä³öÍ¼Ïñh, ¾í»ıÖ®ºóÊä³öÍ¼ÏñÍ¼Ïñw]
+      // conv_input_shape_data = [å·ç§¯ä¹‹åè¾“å‡ºå›¾åƒé€šé“æ•°, å·ç§¯ä¹‹åè¾“å‡ºå›¾åƒh, å·ç§¯ä¹‹åè¾“å‡ºå›¾åƒå›¾åƒw]
       conv_input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
     }
   }
@@ -345,17 +345,17 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-  // ¾­¹ıim2col±ä»»Ö®ºó´æ·ÅÊı¾İcol_buffer_µÄĞÎ×´
+  // ç»è¿‡im2colå˜æ¢ä¹‹åå­˜æ”¾æ•°æ®col_buffer_çš„å½¢çŠ¶
   col_buffer_.Reshape(col_buffer_shape_);
 
-  // ÊäÈëµÄ´óĞ¡ bottom_dim_ = conv_in_channel X image_height X image_width
+  // è¾“å…¥çš„å¤§å° bottom_dim_ = conv_in_channel X image_height X image_width
   bottom_dim_ = bottom[0]->count(channel_axis_);
-  // Êä³öµÄ´óĞ¡ top_dim_ = conv_out_channel X out_height X out_width
+  // è¾“å‡ºçš„å¤§å° top_dim_ = conv_out_channel X out_height X out_width
   top_dim_ = top[0]->count(channel_axis_);
 
 
-  // conv_in_channels_ = ÊäÈëÍ¼ÏñµÄÍ¨µÀÊı
-  // conv_out_spatial_dim_ = ¾í»ıÖ®ºóÊä³öÍ¼ÏñµÄ³¤¶ÈºÍ¿í¶È
+  // conv_in_channels_ = è¾“å…¥å›¾åƒçš„é€šé“æ•°
+  // conv_out_spatial_dim_ = å·ç§¯ä¹‹åè¾“å‡ºå›¾åƒçš„é•¿åº¦å’Œå®½åº¦
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
 
   
@@ -365,8 +365,8 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   
   // Set up the all ones "bias multiplier" for adding biases by BLAS
-  // bias_multiplier_½«Æ«ÖÃÀ©Õ¹³É¾ØÕó
-  // bias_multiplier_µÄĞÎ×´ÊÇ  1 x out_spatial_dim_
+  // bias_multiplier_å°†åç½®æ‰©å±•æˆçŸ©é˜µ
+  // bias_multiplier_çš„å½¢çŠ¶æ˜¯  1 x out_spatial_dim_
   out_spatial_dim_ = top[0]->count(first_spatial_axis);
   if (bias_term_) {
     vector<int> bias_multiplier_shape(1, out_spatial_dim_);
@@ -378,7 +378,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 
 
-// ½øĞĞ¾í»ıÔËËã
+// è¿›è¡Œå·ç§¯è¿ç®—
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
@@ -387,27 +387,27 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
   
   if (!is_1x1_) {
     if (!skip_im2col) {
-	  // Èç¹ûÃ»ÓĞ1x1¾í»ı£¬Ò²Ã»ÓĞskip_im2col
-	  // ÔòÊ¹ÓÃconv_im2col_cpu¶ÔÊ¹ÓÃ¾í»ıºË»¬¶¯¹ı³ÌÖĞµÄÃ¿Ò»¸ökernel´óĞ¡µÄÍ¼Ïñ¿é
-	  // ±ä³ÉÒ»¸öÁĞÏòÁ¿£¬ĞÎ³ÉÒ»¸ö
+	  // å¦‚æœæ²¡æœ‰1x1å·ç§¯ï¼Œä¹Ÿæ²¡æœ‰skip_im2col
+	  // åˆ™ä½¿ç”¨conv_im2col_cpuå¯¹ä½¿ç”¨å·ç§¯æ ¸æ»‘åŠ¨è¿‡ç¨‹ä¸­çš„æ¯ä¸€ä¸ªkernelå¤§å°çš„å›¾åƒå—
+	  // å˜æˆä¸€ä¸ªåˆ—å‘é‡ï¼Œå½¢æˆä¸€ä¸ª
       // kernrl_dim_ = input_channels*kernel height*kernel width 
 	  // height = kernel_dim_
-	  // width = ¾í»ıºóÍ¼Ïñheght*¾í»ıºóÍ¼Ïñwidth
-	  // µÄ¾ØÕó
+	  // width = å·ç§¯åå›¾åƒheght*å·ç§¯åå›¾åƒwidth
+	  // çš„çŸ©é˜µ
       conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
     }
     col_buff = col_buffer_.cpu_data();
   }
 
-  // Ê¹ÓÃcaffeµÄcpu_gemmÀ´½øĞĞ¼ÆËã
+  // ä½¿ç”¨caffeçš„cpu_gemmæ¥è¿›è¡Œè®¡ç®—
   for (int g = 0; g < group_; ++g) {
-  	// ·Ö×é·Ö±ğ½øĞĞ¼ÆËã
-  	// conv_out_channels_ / group_ÊÇÃ¿¸ö¾í»ı×éµÄÊä³öµÄchannel
+  	// åˆ†ç»„åˆ†åˆ«è¿›è¡Œè®¡ç®—
+  	// conv_out_channels_ / group_æ˜¯æ¯ä¸ªå·ç§¯ç»„çš„è¾“å‡ºçš„channel
   	
   	// output[output_offset_ * g] = weights[weight_offset_ * g] X col_buff[col_offset_ * g]
-  	// weightsµÄĞÎ×´ÊÇ [conv_out_channel x kernel_dim_]
-  	// col_buffµÄĞÎ×´ÊÇ[kernel_dim_ x (¾í»ıºóÍ¼Ïñ¸ß¶È³ËÒÔ¾í»ıºóÍ¼Ïñ¿í¶È)]
-  	// outputµÄĞÎ×´×ÔÈ»¾ÍÊÇconv_out_channel X (¾í»ıºóÍ¼Ïñ¸ß¶È³ËÒÔ¾í»ıºóÍ¼Ïñ¿í¶È)
+  	// weightsçš„å½¢çŠ¶æ˜¯ [conv_out_channel x kernel_dim_]
+  	// col_buffçš„å½¢çŠ¶æ˜¯[kernel_dim_ x (å·ç§¯åå›¾åƒé«˜åº¦ä¹˜ä»¥å·ç§¯åå›¾åƒå®½åº¦)]
+  	// outputçš„å½¢çŠ¶è‡ªç„¶å°±æ˜¯conv_out_channel X (å·ç§¯åå›¾åƒé«˜åº¦ä¹˜ä»¥å·ç§¯åå›¾åƒå®½åº¦)
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
         group_, conv_out_spatial_dim_, kernel_dim_,
         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
@@ -415,28 +415,28 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
   }
 }
 
-// ¼ÓÉÏÆ«ÖÃ
-// outputÊÇ¾­¹ı¾í»ıºóµÄÍ¼Ïñ
+// åŠ ä¸Šåç½®
+// outputæ˜¯ç»è¿‡å·ç§¯åçš„å›¾åƒ
 // output = output + bias * bias_multiplier_
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_cpu_bias(Dtype* output,
     const Dtype* bias) {
   // output = output + bias * bias_multiplier_
-  // num_output Óë conv_out_channelµÄÖµÏàµÈ
-  // bias»á×ª»»ÎªĞÎ×´:num_output_ x 1
-  // bias_multiplier_µÄĞÎ×´ÊÇ:1 x out_spatial_dim_
-  // ÄÇÃ´ÕâÁ½»õÏà³ËÖ®ºóµÄĞÎ×´ÊÇ:num_output_ x out_spatial_dim_
+  // num_output ä¸ conv_out_channelçš„å€¼ç›¸ç­‰
+  // biasä¼šè½¬æ¢ä¸ºå½¢çŠ¶:num_output_ x 1
+  // bias_multiplier_çš„å½¢çŠ¶æ˜¯:1 x out_spatial_dim_
+  // é‚£ä¹ˆè¿™ä¸¤è´§ç›¸ä¹˜ä¹‹åçš„å½¢çŠ¶æ˜¯:num_output_ x out_spatial_dim_
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
       out_spatial_dim_, 1, (Dtype)1., bias, bias_multiplier_.cpu_data(),
       (Dtype)1., output);
 }
 
 
-// ¾í»ıµÄ·´´«£¬ºÜ¼òµ¥
-// ¾í»ı±¾À´¾ÍÊÇÏÈÓÃim2col×ª»»Îª¾ØÕó£¬È»ºóÖ´ĞĞµÄÊµ¼ÊÉÏ¾ÍÊÇy=W*x
-// ¶Ôy¹ØÓÚxÇóÆ«µ¼µÃµ½W
-// ÄÇÃ´·´´«µ½ÏÂÒ»²ãµÄÌİ¶È¾ÍÊÇcol_buff = W*output
-// ÔÚ¶Ôcol_buffÓÃcol2im×ª»»ÎªÔ­Í¼Ïñ¼´¿ÉÍê³É·´´«
+// å·ç§¯çš„åä¼ ï¼Œå¾ˆç®€å•
+// å·ç§¯æœ¬æ¥å°±æ˜¯å…ˆç”¨im2colè½¬æ¢ä¸ºçŸ©é˜µï¼Œç„¶åæ‰§è¡Œçš„å®é™…ä¸Šå°±æ˜¯y=W*x
+// å¯¹yå…³äºxæ±‚åå¯¼å¾—åˆ°W
+// é‚£ä¹ˆåä¼ åˆ°ä¸‹ä¸€å±‚çš„æ¢¯åº¦å°±æ˜¯col_buff = WT*output(è¿™é‡ŒWTä¸ºWçš„è½¬ç½®)
+// åœ¨å¯¹col_buffç”¨col2imè½¬æ¢ä¸ºåŸå›¾åƒå³å¯å®Œæˆåä¼ 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
     const Dtype* weights, Dtype* input) {
@@ -445,7 +445,7 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
     col_buff = input;
   }
   for (int g = 0; g < group_; ++g) {
-    // ¼ÆËãµÄÊÇcol_buff[col_offset_ * g] = 
+    // è®¡ç®—çš„æ˜¯col_buff[col_offset_ * g] = 
     // weights[weight_offset_ * g] x output[output_offset_ * g]
     caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
         conv_out_spatial_dim_, conv_out_channels_ / group_,
@@ -453,15 +453,15 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
         (Dtype)0., col_buff + col_offset_ * g);
   }
   if (!is_1x1_) {
-  	// ÔÙÓÃcol2im×ª»»»ØÀ´
+  	// å†ç”¨col2imè½¬æ¢å›æ¥
     conv_col2im_cpu(col_buff, input);
   }
 }
 
-// Õâ¸öÊÇ¼ÆËãÈ¨ÖØµÄ¸üĞÂ
-// ¾í»ıÊµ¼ÊÉÏ¾ÍÊÇy=W*x+b
-// ÄÇÃ´y¹ØÓÚWÇóÆ«µ¼¾ÍÊÇx
-// ÄÇÃ´È¨ÖØµÄ¸üĞÂ¾ÍÊÇweights += output*col_buff
+// è¿™ä¸ªæ˜¯è®¡ç®—æƒé‡çš„æ›´æ–°
+// å·ç§¯å®é™…ä¸Šå°±æ˜¯y=W*x+b
+// é‚£ä¹ˆyå…³äºWæ±‚åå¯¼å°±æ˜¯x
+// é‚£ä¹ˆæƒé‡çš„æ›´æ–°å°±æ˜¯weights += output*col_buff
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {
@@ -471,7 +471,7 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     col_buff = col_buffer_.cpu_data();
   }
   for (int g = 0; g < group_; ++g) {
-  	// ¼ÆËãµÄÊÇweights[weight_offset_ * g] += 
+  	// è®¡ç®—çš„æ˜¯weights[weight_offset_ * g] += 
   	// output[output_offset_ * g] X col_buff[col_offset_ * g]
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
         kernel_dim_, conv_out_spatial_dim_,
@@ -480,15 +480,15 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
   }
 }
 
-// Æ«ÖÃµÄ·´´«
-// ÒòÎªÊÇy=Wx+b
-// y¹ØÓÚbÇóÆ«µ¼¼´Îª1
-// ÄÇÃ´¾ÍÊÇbias += input*bias_multiplier_
+// åç½®çš„åä¼ 
+// å› ä¸ºæ˜¯y=Wx+b
+// yå…³äºbæ±‚åå¯¼å³ä¸º1
+// é‚£ä¹ˆå°±æ˜¯bias += input*bias_multiplier_
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_cpu_bias(Dtype* bias,
     const Dtype* input) {
-  // inputµÄĞÎ×´:num_output_ * out_spatial_dim_
-  // bias_multiplier_µÄĞÎ×´:out_spatial_dim_ * 1
+  // inputçš„å½¢çŠ¶:num_output_ * out_spatial_dim_
+  // bias_multiplier_çš„å½¢çŠ¶:out_spatial_dim_ * 1
   // bias = input*bias_multiplier_+ bias
   caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
       input, bias_multiplier_.cpu_data(), 1., bias);
