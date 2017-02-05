@@ -8,8 +8,8 @@
 
 namespace caffe {
 
-// LayerÀàÊ×ÏÈ»áSetUp£¬È»ºó»áReshape
-// »ùÀàÔÚReshapeµÄÊ±ºò»áµ÷ÓÃ´Ëº¯Êı
+// Layerç±»é¦–å…ˆä¼šSetUpï¼Œç„¶åä¼šReshape
+// åŸºç±»åœ¨Reshapeçš„æ—¶å€™ä¼šè°ƒç”¨æ­¤å‡½æ•°
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
@@ -26,21 +26,21 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
   }
 }
 
-// ¾í»ıµÄÇ°´«
+// å·ç§¯çš„å‰ä¼ 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // ¾í»ıºË£¬ÄãÒ²¿ÉÒÔÀí½âÎªÈ¨ÖØ
+  // å·ç§¯æ ¸ï¼Œä½ ä¹Ÿå¯ä»¥ç†è§£ä¸ºæƒé‡
   const Dtype* weight = this->blobs_[0]->cpu_data();
 
-  // Ã¿Ò»¸öÊäÈëÍ¼Ïñ½øĞĞ´¦Àí
+  // æ¯ä¸€ä¸ªè¾“å…¥å›¾åƒè¿›è¡Œå¤„ç†
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 	// num_ = batchsize
     for (int n = 0; n < this->num_; ++n) {
-	  // »ùÀàµÄforward_cpu_gemmº¯Êı
-	  // ¼ÆËãµÄÊÇtop_data[n * this->top_dim_] = 
+	  // åŸºç±»base_conv_layerçš„forward_cpu_gemmå‡½æ•°
+	  // è®¡ç®—çš„æ˜¯top_data[n * this->top_dim_] = 
 	  // weights X bottom_data[n * this->bottom_dim_]
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
@@ -62,7 +62,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
     // Bias gradient, if necessary.
-    // ·´´«Æ«ÖÃ
+    // åä¼ åç½®
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
 	  // num_ = batchsize
@@ -71,18 +71,18 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
 
-	// ÒªÅĞ¶ÏÊÇ·ñ·´´«
+	// è¦åˆ¤æ–­æ˜¯å¦åä¼ 
     if (this->param_propagate_down_[0] || propagate_down[i]) {
 		// num_ = batchsize
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-		  // ¼ÆËãÈ¨ÖØ¸üĞÂ
+		  // è®¡ç®—æƒé‡æ›´æ–°
           this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
               top_diff + n * this->top_dim_, weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
-        // ¼ÆËã¹ØÓÚ¾í»ı²ãÊäÈëµÄÌİ¶È£¬·ÅÈëbottom_diff£¬±ãÓÚ·´´«µ½Ç°Ò»²ã
+        // è®¡ç®—å…³äºå·ç§¯å±‚è¾“å…¥çš„æ¢¯åº¦ï¼Œæ”¾å…¥bottom_diffï¼Œä¾¿äºåä¼ åˆ°å‰ä¸€å±‚
         if (propagate_down[i]) {
           this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
               bottom_diff + n * this->bottom_dim_);
